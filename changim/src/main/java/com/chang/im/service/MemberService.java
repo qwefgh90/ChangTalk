@@ -7,8 +7,12 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import com.chang.im.dao.MemberDAO;
+import com.chang.im.dao.TokenDAO;
+import com.chang.im.dao.LoginInfoDAO;
 import com.chang.im.dto.Member;
 import com.chang.im.dto.MemberContext;
+import com.chang.im.dto.TokenListItem;
+import com.chang.im.dto.LoginInfo;
 import com.chang.im.util.IMUtil;
 
 @Service
@@ -16,12 +20,18 @@ public class MemberService implements UserDetailsService{
 	@Autowired
 	MemberDAO memberDAO;
 
+	@Autowired
+	LoginInfoDAO userInfoDAO;
+
+	@Autowired
+	TokenDAO tokenDAO;
+
 	@Override
 	public UserDetails loadUserByUsername(String id)
 			throws UsernameNotFoundException {
 		Member member = memberDAO.getMember(id);
 		if(member == null)
-			return null;
+			throw new UsernameNotFoundException("User " + id + " not found");
 		else
 			return new MemberContext(member);
 	}
@@ -33,10 +43,9 @@ public class MemberService implements UserDetailsService{
 	 */
 	public boolean registerMember(Member member){
 		boolean result = isExistsMember(member);
-		if(result == false){
+		if(result == false && member.getId() != null && member.getPassword() != null){
 			memberDAO.registerMember(member);
-			result = isExistsMember(member);
-			return result;
+			return isExistsMember(member);
 		}else{
 			return false;
 		}
@@ -49,8 +58,7 @@ public class MemberService implements UserDetailsService{
 	 * @return
 	 */
 	public boolean isExistsMember(Member member){
-		Member memberinfo = memberDAO.getMember(member.getId());
-		return memberinfo == null ? false : true;
+		return memberDAO.isExistsMember(member.getId());
 	}
 
 	/**
@@ -60,10 +68,9 @@ public class MemberService implements UserDetailsService{
 	 */
 	public boolean deleteMember(Member member){
 		boolean result = isExistsMember(member);
-		if(result==true){
+		if(result == true){
 			memberDAO.deleteMember(member.getId());
-			result = !isExistsMember(member);
-			return result;
+			return ! isExistsMember(member);
 		}else{
 			return true;
 		}
@@ -75,7 +82,7 @@ public class MemberService implements UserDetailsService{
 	 * @return
 	 */
 	public Member getMember(Member member){
-		if(member == null || this.isExistsMember(member) == false){
+		if(member == null || isExistsMember(member) == false){
 			return null;
 		}else{
 			Member resultMember = memberDAO.getMember(member.getId());
@@ -92,16 +99,26 @@ public class MemberService implements UserDetailsService{
 		if(isExistsMember(member) == false){
 			return false;
 		}else{
-			Member dbMember = this.getMember(member);
+			Member dbMember = memberDAO.getMember(member.getId());
 			if(dbMember.getId().equals(member.getId()) == true && dbMember.getPassword().equals(member.getPassword()) == true){
 				long unixtime = IMUtil.getCurrentUnixTime();
-				long expire = IMUtil.getCurrentUnixTime()+3600*3;
-				String hash = IMUtil.sha256(member.getId() + unixtime);
-				member.setToken(hash);
-				member.setExpire(expire);
+				long expire = makeExpireTime();	//3시간
+				String token = IMUtil.sha256(member.getId() + unixtime);
+
 				//transaction required
-				memberDAO.insertTokenList(member);
-				memberDAO.insertUserInfo(member);
+				LoginInfo info = new LoginInfo();
+				info.setId(member.getId());
+				info.setPhone(member.getPhone());
+				info.setToken(token);
+				info.setRoles(member.getRoles());
+				userInfoDAO.insertUserInfo(info);
+
+				TokenListItem item = new TokenListItem();
+				item.setId(member.getId());
+				item.setExpire(expire);
+				item.setToken(token);
+				tokenDAO.insertTokenList(item);
+
 				return true;
 			}else{
 				return false;
@@ -109,16 +126,49 @@ public class MemberService implements UserDetailsService{
 		}
 	}
 
+	/**
+	 * 토큰 삭제
+	 * @param token
+	 * @return
+	 */
 	public boolean logout(String token){
-		boolean exists = memberDAO.isExistsUserInfo(token);
+		boolean exists = userInfoDAO.isExistsUserInfo(token);
 		if(exists== false){
 			return false;
 		}else{
-			Member info =memberDAO.getUserInfo(token);
-			memberDAO.deleteUserInfo(token);
-			memberDAO.deleteTokenList(info);
+			LoginInfo info = userInfoDAO.getUserInfo(token);
+			userInfoDAO.deleteUserInfo(token);
+			tokenDAO.deleteTokenList(info.getId());
 			return true;
 		}
+	}
 
+	public TokenListItem getTokenListItem(String id){
+		return tokenDAO.getTokenList(id);
+	}
+
+	public LoginInfo getUserInfo(String token){
+		return userInfoDAO.getUserInfo(token);
+	}
+
+	public boolean isExistToken(String token){
+		return userInfoDAO.isExistsUserInfo(token);
+	}
+//1425235429 1425235610
+	public boolean updateTokenDate(String token){
+		LoginInfo info = getUserInfo(token);
+		if(null != info){
+			TokenListItem tokenItem = getTokenListItem(info.getId());
+			if(null != tokenItem){
+				tokenItem.setExpire(makeExpireTime());
+				tokenDAO.insertTokenList(tokenItem);
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	private Long makeExpireTime(){
+		return IMUtil.getCurrentUnixTime()+3600*3;
 	}
 }

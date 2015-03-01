@@ -4,23 +4,10 @@ public class Member {
 	String id;
 	String password;
 	String phone;
-	String token;
-	long expire;
-	
 	String[] roles;
 	
-	public long getExpire() {
-		return expire;
-	}
-	public void setExpire(long expire) {
-		this.expire = expire;
-	}
-	public String getToken() {
-		return token;
-	}
-	public void setToken(String token) {
-		this.token = token;
-	}
+	public static final String MEMBER_ROLE = "MEMBER_ROLE";
+	
 	public String getId() {
 		return id;
 	}
@@ -42,7 +29,7 @@ public class Member {
 	public String[] getRoles() {
 		return roles;
 	}
-	public void setRoles(String[] roles) {
+	public void setRoles(String... roles) {
 		this.roles = roles;
 	}
 	

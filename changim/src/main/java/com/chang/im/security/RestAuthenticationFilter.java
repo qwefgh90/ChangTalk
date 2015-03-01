@@ -12,6 +12,8 @@ import javax.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.filter.GenericFilterBean;
 
+import com.chang.im.service.MemberService;
+
 public class RestAuthenticationFilter extends GenericFilterBean {
 
 	private static final String LOGIN_URL_V1 = "/v1/auth/login";
@@ -24,14 +26,17 @@ public class RestAuthenticationFilter extends GenericFilterBean {
 	@Autowired
 	AuthenticationService authenticationService;
 
+
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
 		HttpServletRequest httpRequest = (HttpServletRequest) request;
 		HttpServletResponse httpResponse = (HttpServletResponse) response;
 		doFilterv1(httpRequest,httpResponse,chain);
 	}
+
 	/**
 	 * rest version 1 을 위한 필터
+	 * 로그인/로그아웃은 HTTP처리 및 응답 (/v1/auth/.* 여기서 처리됨)
 	 * @param request
 	 * @param response
 	 * @param chain
@@ -43,43 +48,44 @@ public class RestAuthenticationFilter extends GenericFilterBean {
 		String extractedPassword = request.getHeader(HEADER_PASSWORD);
 		String extractedToken = request.getHeader(HEADER_TOKEN);
 
-		if(currentLink(request).equals(LOGIN_URL_V1) && request.getMethod() == "POST"){
-			String createdToken = authenticationService.authenticate(extractedId, extractedPassword);
-			if(createdToken != null){
-				//login success
-				response.setHeader(HEADER_TOKEN, createdToken);
-				chain.doFilter(request, response);
-			}else{
-				//fail
-				response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
-			}
-		}else{
+		boolean authentication = checkAuthenticateForHttp(extractedToken);
 
-			boolean authentication = checkAuthenticateForHttp(extractedToken);
-
-			if(!authentication){
-				//auth fail
-				response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
-			}else{
-
-				if(currentLink(request).equals(LOGOUT_URL_V1) && request.getMethod() == "POST"){
-					//logout
-					logoutForHttp(extractedToken);
+		//로그인
+		if (currentLink(request).equals(LOGIN_URL_V1) && request.getMethod() == "POST") {
+			if(authentication == false){
+				String createdToken = authenticationService.authenticate(extractedId, extractedPassword);
+				if(createdToken != null){
+					response.setHeader(HEADER_TOKEN, createdToken);
+					response.sendError(HttpServletResponse.SC_OK);
 				}else{
-					//do filter
-					chain.doFilter(request, response);
+					response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
 				}
+			} else {
+				response.setHeader(HEADER_TOKEN, extractedToken);
+				response.sendError(HttpServletResponse.SC_OK);
 			}
+			//로그아웃
+		} else if (currentLink(request).equals(LOGOUT_URL_V1) && request.getMethod() == "POST") {
+			if (authentication) {
+				if(logoutForHttp(extractedToken))
+					response.sendError(HttpServletResponse.SC_OK);
+				else
+					response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+			} else {
+				response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+			}
+
+		} else {
+			chain.doFilter(request, response);
 		}
 	}
 
 	public boolean checkAuthenticateForHttp(String token){
-		boolean result = false;
-		return result;
+		return authenticationService.checkToken(token);
 	}
 
-	public void logoutForHttp(String token){
-
+	public boolean logoutForHttp(String token){
+		return authenticationService.logout(token);
 	}
 
 	public String currentLink(HttpServletRequest httpRequest) {

@@ -12,6 +12,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import com.chang.im.security.AuthenticationService;
 import com.chang.im.security.AuthenticationServiceImpl;
 import com.chang.im.security.RestAuthenticationFilter;
 import com.chang.im.security.UnauthorizedEntryPoint;
@@ -27,39 +28,31 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
 	 	http
-	 	.csrf()
-	 		.disable()
-		.addFilterBefore(restAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)	//커스텀 인증 필터
-		.sessionManagement()
-			.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-			.and()
-		.exceptionHandling()	
-			.authenticationEntryPoint(unauthorizedEntryPoint())	//예외 발생시 핸들러 등록
-			.and()
+		.csrf()
+ 			.disable()	
+ 		.addFilterAfter(restAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)	//커스텀 인증 필터
+ 		.sessionManagement()
+ 			.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+ 			.and()
+ 		.exceptionHandling()	
+ 			.authenticationEntryPoint(unauthorizedEntryPoint())	//예외 발생시 핸들러 등록
+ 			.and()
 		.authorizeRequests()	//use-expressions = true 를 포함함
-			.antMatchers("/v1/*").fullyAuthenticated()	//인증
-			.antMatchers("/v1/auth/*").fullyAuthenticated()	//인증
-			.antMatchers("/*").permitAll()	//모든 URL 허가
-			.anyRequest().authenticated();
+			//위쪽부터 일치하는지 검사하므로 허가 허용하고 싶을 경우 위쪽으로 배치
+			.regexMatchers("/").permitAll()	//URL 허가
+			.regexMatchers("/hello").permitAll()	//URL 허가
+			.regexMatchers("/v1/.*").permitAll();	//회원 가입
+			//.regexMatchers("/v1/.*").fullyAuthenticated();//Rest api v1
 	}
 
-	 @Autowired
-	    public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
-			BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-	        auth
-			.userDetailsService(memberService)
-			.passwordEncoder(passwordEncoder);
-	    }
+	@Autowired
+	public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
+		BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+		auth
+		.userDetailsService(memberService);
+		//.passwordEncoder(passwordEncoder);	//실제 서비스 시 인코더 적용?
+	}
 	
-//	@Override
-//	protected void configure(AuthenticationManagerBuilder auth)
-//			throws Exception {
-//		BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-//		auth
-//		.userDetailsService(memberService)
-//		.passwordEncoder(passwordEncoder);
-//	}
-
 	/**
 	 * 빈 설정
 	 * 예외 발생 시 401 발생 핸들러
@@ -77,7 +70,6 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 	 */
 	@Bean
 	public RestAuthenticationFilter restAuthenticationFilter(){
-
 		return new RestAuthenticationFilter();
 	}
 
@@ -87,11 +79,9 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 	 * @return
 	 */
 	@Bean
-	public AuthenticationServiceImpl authenticationService(){
-
+	public AuthenticationService authenticationService(){
 		return new AuthenticationServiceImpl();
 	}
-
 }
 
 

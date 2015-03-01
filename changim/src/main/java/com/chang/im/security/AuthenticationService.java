@@ -28,7 +28,7 @@ public interface AuthenticationService {
 	boolean checkToken(String token);
 
 	/** Logouts the user - token is invalidated/forgotten. */
-	void logout(String token);
+	boolean logout(String token);
 
 	/** Returns current user or {@code null} if there is no authentication or user is anonymous. */
 	UserDetails currentUser();

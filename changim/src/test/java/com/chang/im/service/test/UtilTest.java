@@ -6,8 +6,7 @@ import org.junit.Test;
 
 import com.chang.im.util.IMUtil;
 
-public class Tests {
-
+public class UtilTest {
 	@Test
 	public void sha256(){
 		String sha = IMUtil.sha256("hello");

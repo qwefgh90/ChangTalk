@@ -10,6 +10,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import com.chang.im.dto.Member;
 import com.chang.im.dto.MemberContext;
+import com.chang.im.dto.LoginInfo;
 import com.chang.im.service.MemberService;
 
 public class AuthenticationServiceImpl implements AuthenticationService{
@@ -19,7 +20,7 @@ public class AuthenticationServiceImpl implements AuthenticationService{
 
 	@Autowired
 	AuthenticationManager authenticationManager;
-
+	
 	/**
 	 * 인증 서비스, 토큰 반환
 	 * return: Token
@@ -37,7 +38,7 @@ public class AuthenticationServiceImpl implements AuthenticationService{
 				//토큰 생성
 				Member member = mContext.getMember();
 				if(memberService.login(member))
-					return member.getToken();
+					return memberService.getTokenListItem(member.getId()).getToken();
 			}
 			}catch ( AuthenticationException e){
 				System.out.println(" *** AuthenticationServiceImpl.authenticate - FAILED: " + e.toString());
@@ -48,19 +49,42 @@ public class AuthenticationServiceImpl implements AuthenticationService{
 
 	@Override
 	public boolean checkToken(String token) {
-		// TODO Auto-generated method stub
-		return false;
+		boolean result = false;
+		if(memberService.isExistToken(token) == true){
+			if(memberService.updateTokenDate(token)){
+				LoginInfo info = memberService.getUserInfo(token);
+				Member member = new Member();
+				member.setId(info.getId());
+				member.setPassword(null);
+				member.setRoles(info.getRoles());
+				MemberContext context = new MemberContext(member);
+				
+				UsernamePasswordAuthenticationToken userpwToken = new UsernamePasswordAuthenticationToken(context.getUsername(),null,context.getAuthorities());
+				
+				SecurityContextHolder.getContext().setAuthentication(userpwToken);
+				result = true;
+			}
+		}
+		
+		return result;
 	}
 
 	@Override
-	public void logout(String token) {
-		// TODO Auto-generated method stub
-
+	public boolean logout(String token) {
+		boolean result = false;
+		if(memberService.logout(token)){
+			SecurityContextHolder.clearContext();
+			result = true;
+		}
+		return result;
 	}
 
 	@Override
 	public UserDetails currentUser() {
-		// TODO Auto-generated method stub
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		if (authentication == null) {
+			return null;
+		}
 		return null;
 	}
 

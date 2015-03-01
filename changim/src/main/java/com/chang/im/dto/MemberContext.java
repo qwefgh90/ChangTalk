@@ -38,26 +38,27 @@ public class MemberContext implements UserDetails {
 
 	@Override
 	public boolean isAccountNonExpired() {
-		// TODO Auto-generated method stub
-		return false;
+		//계정 만료
+		return true;
 	}
 
 	@Override
 	public boolean isAccountNonLocked() {
-		// TODO Auto-generated method stub
-		return false;
+		//최대 로그인 횟수 초과 할 경우 처리??
+		boolean result = true;
+		return result;
 	}
 
 	@Override
 	public boolean isCredentialsNonExpired() {
-		// TODO Auto-generated method stub
-		return false;
+		//비밀번호 만료?
+		return true;
 	}
 
 	@Override
 	public boolean isEnabled() {
-		// TODO Auto-generated method stub
-		return false;
+		//사용가능한가?
+		return true;
 	}
 
 	public Member getMember() {

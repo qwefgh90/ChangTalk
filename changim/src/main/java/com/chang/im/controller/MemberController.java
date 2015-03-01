@@ -17,27 +17,21 @@ public class MemberController {
 	@Autowired
 	MemberService memberService;
 
-	@RequestMapping(value="/v1/member",method=RequestMethod.POST)
+	/**
+	 * \@RequestsBody를 이용해 Obejct 응답 (Object -> JSON 매핑)을 할 경우 Object의 Setter/Getter가 없을경우
+	 * 406 에러를 발생시킨다. 정말 중요하다.
+	 * @param member
+	 * @return
+	 */
+	@RequestMapping(value="/v1/member", method=RequestMethod.POST)
 	ResponseEntity<ResultDTO>  registerMember(@RequestBody Member member){
+		member.setRoles(Member.MEMBER_ROLE);
 		if(memberService.registerMember(member) == true){
 			return new ResponseEntity<ResultDTO>(new ResultDTO(1), HttpStatus.OK);
 		}else{
 			return new ResponseEntity<ResultDTO>(new ResultDTO(0), HttpStatus.OK);			
 		}
-//		return new ResponseEntity<ResultTokenDTO>("LOGIN CONTROLLER",HttpStatus.OK); 
 	}
-
-	@RequestMapping(value="/v1/auth/login",method=RequestMethod.POST)
-	ResponseEntity<String> login(){
-		System.out.println("[MemberController]login");
-		return new ResponseEntity<String>(HttpStatus.OK); 
-	}
-
-	@RequestMapping(value="/v1/auth/logout", method=RequestMethod.POST)
-	ResponseEntity<String> logoutMember(){
-		return new ResponseEntity<String>("LOGOUT CONTROLLER",HttpStatus.OK); 
-	}
-	
 
 	@RequestMapping(value="/v1/hello",method=RequestMethod.GET)
 	ResponseEntity<String> index(){
@@ -46,9 +40,9 @@ public class MemberController {
 	}
 
 	@RequestMapping(value="/hello",method=RequestMethod.GET)
-	ResponseEntity<String> index2(){
+	ResponseEntity<ResultDTO> index2(){
 		String hello = "Hello World";
-		return new ResponseEntity<String>(hello, HttpStatus.OK);
+		return new ResponseEntity<ResultDTO>(new ResultDTO(1), HttpStatus.OK);
 	}
 
 	@RequestMapping(value="/",method=RequestMethod.GET)
@@ -66,6 +60,15 @@ class ResultDTO {
 		super();
 		this.resultCode = resultCode;
 	}
+
+	public int getResultCode() {
+		return resultCode;
+	}
+
+	public void setResultCode(int resultCode) {
+		this.resultCode = resultCode;
+	}
+	
 }
 class ResultTokenDTO {
 	int resultCode;
@@ -75,5 +78,19 @@ class ResultTokenDTO {
 		this.resultCode = resultCode;
 		this.token = token;
 	}
+	public int getResultCode() {
+		return resultCode;
+	}
+	public void setResultCode(int resultCode) {
+		this.resultCode = resultCode;
+	}
+	public String getToken() {
+		return token;
+	}
+	public void setToken(String token) {
+		this.token = token;
+	}
+	
+	
 
 }
