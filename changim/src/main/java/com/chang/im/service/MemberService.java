@@ -167,8 +167,13 @@ public class MemberService implements UserDetailsService{
 		}
 		return false;
 	}
+
+	public boolean getLoginState(String id){
+		return tokenDAO.isExistsTokenList(id);
+	}
 	
 	private Long makeExpireTime(){
 		return IMUtil.getCurrentUnixTime()+3600*3;
 	}
 }
+

@@ -20,7 +20,7 @@ public class AuthenticationServiceImpl implements AuthenticationService{
 
 	@Autowired
 	AuthenticationManager authenticationManager;
-	
+
 	/**
 	 * 인증 서비스, 토큰 반환
 	 * return: Token
@@ -29,64 +29,72 @@ public class AuthenticationServiceImpl implements AuthenticationService{
 	public String authenticate(String id, String password) {
 		if(id != null && password != null){
 			try {
-			Authentication authentication = new UsernamePasswordAuthenticationToken(id, password);
-			authentication = authenticationManager.authenticate(authentication);
-			UserDetails userDetails = (UserDetails)authentication.getPrincipal();
-			if(userDetails != null && authentication.isAuthenticated()){
-				SecurityContextHolder.getContext().setAuthentication(authentication);
-				MemberContext mContext = ((MemberContext)userDetails);
-				//토큰 생성
-				Member member = mContext.getMember();
-				if(memberService.login(member))
-					return memberService.getTokenListItem(member.getId()).getToken();
+				if(memberService.getLoginState(id)){
+					String token = memberService.getTokenListItem(id).getToken();
+					if(null != token && checkToken(token))
+						return token;
+				}
+					Authentication authentication = new UsernamePasswordAuthenticationToken(id, password);
+					authentication = authenticationManager.authenticate(authentication);
+					UserDetails userDetails = (UserDetails)authentication.getPrincipal();
+					if(userDetails != null && authentication.isAuthenticated()){
+						SecurityContextHolder.getContext().setAuthentication(authentication);
+						MemberContext mContext = ((MemberContext)userDetails);
+						//토큰 생성
+						Member member = mContext.getMember();
+						if(memberService.login(member))
+							return memberService.getTokenListItem(member.getId()).getToken();
+					}
+				}catch ( AuthenticationException e){
+					System.out.println(" *** AuthenticationServiceImpl.authenticate - FAILED: " + e.toString());
+				}
 			}
-			}catch ( AuthenticationException e){
-				System.out.println(" *** AuthenticationServiceImpl.authenticate - FAILED: " + e.toString());
-			}
-		}
-		return null;
-	}
-
-	@Override
-	public boolean checkToken(String token) {
-		boolean result = false;
-		if(memberService.isExistToken(token) == true){
-			if(memberService.updateTokenDate(token)){
-				LoginInfo info = memberService.getUserInfo(token);
-				Member member = new Member();
-				member.setId(info.getId());
-				member.setPassword(null);
-				member.setRoles(info.getRoles());
-				MemberContext context = new MemberContext(member);
-				
-				UsernamePasswordAuthenticationToken userpwToken = new UsernamePasswordAuthenticationToken(context.getUsername(),null,context.getAuthorities());
-				
-				SecurityContextHolder.getContext().setAuthentication(userpwToken);
-				result = true;
-			}
-		}
-		
-		return result;
-	}
-
-	@Override
-	public boolean logout(String token) {
-		boolean result = false;
-		if(memberService.logout(token)){
-			SecurityContextHolder.clearContext();
-			result = true;
-		}
-		return result;
-	}
-
-	@Override
-	public UserDetails currentUser() {
-		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		if (authentication == null) {
 			return null;
 		}
-		return null;
+
+		@Override
+		public boolean checkToken(String token) {
+			if(token == null)
+				return false;
+			
+			boolean result = false;
+			if(memberService.isExistToken(token) == true){
+				if(memberService.updateTokenDate(token)){
+					LoginInfo info = memberService.getUserInfo(token);
+					Member member = new Member();
+					member.setId(info.getId());
+					member.setPassword(null);
+					member.setRoles(info.getRoles());
+					MemberContext context = new MemberContext(member);
+
+					UsernamePasswordAuthenticationToken userpwToken = new UsernamePasswordAuthenticationToken(context.getUsername(),null,context.getAuthorities());
+
+					SecurityContextHolder.getContext().setAuthentication(userpwToken);
+					result = true;
+				}
+			}
+
+			return result;
+		}
+
+		@Override
+		public boolean logout(String token) {
+			boolean result = false;
+			if(memberService.logout(token)){
+				SecurityContextHolder.clearContext();
+				result = true;
+			}
+			return result;
+		}
+
+		@Override
+		public UserDetails currentUser() {
+			Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+			if (authentication == null) {
+				return null;
+			}
+			return null;
+		}
+
+
 	}
-
-
-}
