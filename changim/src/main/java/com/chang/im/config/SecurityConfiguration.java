@@ -3,6 +3,7 @@ package com.chang.im.config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -41,8 +42,8 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 			//위쪽부터 일치하는지 검사하므로 허가 허용하고 싶을 경우 위쪽으로 배치
 			.regexMatchers("/").permitAll()	//URL 허가
 			.regexMatchers("/hello").permitAll()	//URL 허가
-			.regexMatchers("/v1/.*").permitAll();	//회원 가입
-			//.regexMatchers("/v1/.*").fullyAuthenticated();//Rest api v1
+			.regexMatchers(HttpMethod.POST,"/v1/member").permitAll()	//회원 가입
+			.regexMatchers("/v1/.*").fullyAuthenticated();	//회원 가입
 	}
 
 	@Autowired

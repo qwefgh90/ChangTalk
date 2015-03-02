@@ -45,12 +45,6 @@ public class MemberController {
 		return new ResponseEntity<ResultDTO>(new ResultDTO(1), HttpStatus.OK);
 	}
 
-	@RequestMapping(value="/",method=RequestMethod.GET)
-	ResponseEntity<String> index3(){
-		String hello = "Hello World";
-		return new ResponseEntity<String>(hello, HttpStatus.OK);
-	}
-
 }
 
 class ResultDTO {

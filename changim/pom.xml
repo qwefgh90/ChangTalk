@@ -11,6 +11,12 @@
 		<version>1.1.10.RELEASE</version>
 	</parent>
 
+	<properties>
+		<vertx.version>2.0.1-final</vertx.version>
+		<mod-socket-io.version>1.0.2</mod-socket-io.version>
+		<java.version>1.7</java.version>
+	</properties>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -58,18 +64,34 @@
 			<version>2.1.2</version>
 		</dependency>
 
-		        <dependency>
-            <groupId>org.codehaus.jackson</groupId>
-            <artifactId>jackson-core-lgpl</artifactId>
-            <version>1.9.5</version>
-        </dependency>
-        <dependency>
-            <groupId>org.codehaus.jackson</groupId>
-            <artifactId>jackson-mapper-lgpl</artifactId>
-            <version>1.9.5</version>
-        </dependency>
+		<dependency>
+			<groupId>org.codehaus.jackson</groupId>
+			<artifactId>jackson-core-lgpl</artifactId>
+			<version>1.9.5</version>
+		</dependency>
+		<dependency>
+			<groupId>org.codehaus.jackson</groupId>
+			<artifactId>jackson-mapper-lgpl</artifactId>
+			<version>1.9.5</version>
+		</dependency>
 
+		<!-- vert.x -->
 
+		<dependency>
+			<groupId>io.vertx</groupId>
+			<artifactId>vertx-core</artifactId>
+			<version>${vertx.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.vertx</groupId>
+			<artifactId>vertx-platform</artifactId>
+			<version>${vertx.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.nhncorp</groupId>
+			<artifactId>mod-socket-io</artifactId>
+			<version>${mod-socket-io.version}</version>
+		</dependency>
 	</dependencies>
 
 
@@ -83,6 +105,10 @@
 	</build>
 
 	<repositories>
+		<repository>
+			<id>keesun.repo</id>
+			<url>https://github.com/keesun/mvn-repo/raw/master</url>
+		</repository>
 		<repository>
 			<id>spring-releases</id>
 			<url>https://repo.spring.io/libs-release</url>
