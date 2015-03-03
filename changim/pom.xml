@@ -92,6 +92,7 @@
 			<artifactId>mod-socket-io</artifactId>
 			<version>${mod-socket-io.version}</version>
 		</dependency>
+
 	</dependencies>
 
 
