@@ -10,12 +10,16 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.listener.ChannelTopic;
+import org.springframework.data.redis.listener.RedisMessageListenerContainer;
+import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
 import org.springframework.data.redis.serializer.JacksonJsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import com.chang.im.dto.LoginInfo;
 import com.chang.im.dto.Member;
 import com.chang.im.dto.TokenListItem;
+import com.chang.im.service.MessageListenerImpl;
 
 @Configuration
 //현재의 클래스가 Spring의 설정파일임을 어플리케이션 컨텍스트에게 알려주는 역할을 합니다.
@@ -34,20 +38,20 @@ public class Application {
 	int port;
 	@Value("${redis.passwd}")
 	String passwd;
-	
+
 	public static void main(String[] args) {
 		SpringApplication.run( Application.class, args);
 	}
-	
+
 	/**
 	 * @Value를 사용하기 위해 필요한 빈 
 	 * @return
 	 */
 	@Bean
 	public static PropertySourcesPlaceholderConfigurer propertyPlaceholderConfigurer() {
-	    return new PropertySourcesPlaceholderConfigurer();
+		return new PropertySourcesPlaceholderConfigurer();
 	}
-	
+
 	@Bean
 	public JedisConnectionFactory jedisConnFactory(){
 		JedisConnectionFactory factory = new JedisConnectionFactory();
@@ -56,6 +60,15 @@ public class Application {
 		factory.setPassword(passwd);
 		factory.setUsePool(true);
 		return factory;
+	}
+
+	@Bean
+	public RedisTemplate<String,String> redisTemplateForMessage(){
+		RedisTemplate<String,String> template = new RedisTemplate<String,String>();
+		template.setConnectionFactory(jedisConnFactory());
+		template.setKeySerializer(new StringRedisSerializer());
+		template.setValueSerializer(new StringRedisSerializer());
+		return template;
 	}
 
 	@Bean
@@ -83,6 +96,26 @@ public class Application {
 		template.setKeySerializer(new StringRedisSerializer());
 		template.setValueSerializer(new JacksonJsonRedisSerializer<TokenListItem>(TokenListItem.class));
 		return template;
+	}
+
+	////Messanger
+
+	@Bean
+	RedisMessageListenerContainer redisContainer() {
+		final RedisMessageListenerContainer container = new RedisMessageListenerContainer();
+		container.setConnectionFactory( jedisConnFactory() );
+		container.addMessageListener( sampleMessageListener(), sampleTopic() );
+		return container;
+	}
+
+	@Bean
+	MessageListenerAdapter sampleMessageListener() {
+		return new MessageListenerAdapter( new MessageListenerImpl() );
+	}
+
+	@Bean
+	ChannelTopic sampleTopic() {
+		return new ChannelTopic( "CHANGIM" );
 	}
 
 }

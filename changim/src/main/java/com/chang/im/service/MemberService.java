@@ -144,18 +144,26 @@ public class MemberService implements UserDetailsService{
 	}
 
 	public TokenListItem getTokenListItem(String id){
+		if(id == null)
+			return null;
 		return tokenDAO.getTokenList(id);
 	}
 
 	public LoginInfo getUserInfo(String token){
+		if(token == null)
+			return null;
 		return userInfoDAO.getUserInfo(token);
 	}
 
 	public boolean isExistToken(String token){
+		if(token == null)
+			return false;
 		return userInfoDAO.isExistsUserInfo(token);
 	}
 //1425235429 1425235610
 	public boolean updateTokenDate(String token){
+		if(token == null)
+			return false;
 		LoginInfo info = getUserInfo(token);
 		if(null != info){
 			TokenListItem tokenItem = getTokenListItem(info.getId());
@@ -169,6 +177,8 @@ public class MemberService implements UserDetailsService{
 	}
 
 	public boolean getLoginState(String id){
+		if(id == null)
+			return false;
 		return tokenDAO.isExistsTokenList(id);
 	}
 	

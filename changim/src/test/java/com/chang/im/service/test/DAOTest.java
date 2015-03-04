@@ -27,12 +27,9 @@ import com.chang.im.util.IMUtil;
 
 
 
-@RunWith(SpringJUnit4ClassRunner.class)
-
-@SpringApplicationConfiguration(classes = Application.class)
-
-@WebAppConfiguration
-
+//@RunWith(SpringJUnit4ClassRunner.class)
+//@SpringApplicationConfiguration(classes = Application.class)
+//@WebAppConfiguration
 public class DAOTest {
 	@Autowired
 	MemberDAO memberDAO;

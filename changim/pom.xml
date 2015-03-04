@@ -92,6 +92,11 @@
 			<artifactId>mod-socket-io</artifactId>
 			<version>${mod-socket-io.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>io.socket</groupId>
+			<artifactId>socket.io-java-client</artifactId>
+			<version>1</version>
+		</dependency>
 
 	</dependencies>
 
