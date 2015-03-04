@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 import com.chang.im.dto.TokenListItem;
 
 @Repository
-public class TokenDAO {
+public class TokenDAO extends BaseDAO {
 
 	@Autowired
 	RedisTemplate<String,TokenListItem> redisTemplateForTokenListItem;

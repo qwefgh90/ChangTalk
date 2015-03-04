@@ -10,12 +10,11 @@ import org.springframework.stereotype.Repository;
 import com.chang.im.dto.Member;
 
 @Repository
-public class MemberDAO {
+public class MemberDAO extends BaseDAO {
 	@Autowired
 	public RedisTemplate<String, Member> redisTemplateForMember;
 	
 	@Resource(name="redisTemplateForMember")
-	
     private ValueOperations<String, Member> valueOps;
 	
 	public void registerMember(Member member){

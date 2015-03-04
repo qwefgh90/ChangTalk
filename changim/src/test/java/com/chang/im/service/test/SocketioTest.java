@@ -29,7 +29,7 @@ import com.chang.im.config.Application;
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = Application.class)
 @WebAppConfiguration
-public class MessageTest {
+public class SocketioTest {
 
 	String host = "localhost";
 	int port = 9090;
@@ -57,33 +57,33 @@ public class MessageTest {
 			@Override
 			public void on(String arg0, IOAcknowledge arg1, Object... arg2) {
 				System.out.println("[on]"+arg0 +", "+arg1 +", "+arg2);
-				lock.countDown();
+//				lock.countDown();
 			}
 			@Override
 			public void onConnect() {
 				System.out.println("[onConnect]");
 				checkConnect = true;
-				lock.countDown();
+//				lock.countDown();
 			}
 			@Override
 			public void onDisconnect() {
 				System.out.println("[onDisconnect]");
-				lock.countDown();
+//				lock.countDown();
 			}
 			@Override
 			public void onError(SocketIOException arg0) {
 				System.out.println("[onError]"+arg0);
-				lock.countDown();
+//				lock.countDown();
 			}
 			@Override
 			public void onMessage(String arg0, IOAcknowledge arg1) {
 				System.out.println("[onMessage]"+arg0);
-				lock.countDown();
+//				lock.countDown();
 			}
 			@Override
 			public void onMessage(JSONObject arg0, IOAcknowledge arg1) {
 				System.out.println("[onMessage]" + arg0);
-				lock.countDown();
+//				lock.countDown();
 			}
 		});
 		lock.await(3000,TimeUnit.MILLISECONDS);

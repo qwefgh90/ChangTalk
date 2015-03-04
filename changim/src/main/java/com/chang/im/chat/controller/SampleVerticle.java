@@ -45,7 +45,6 @@ public class SampleVerticle extends DefaultEmbeddableVerticle {
 		io.setAuthHandler(new AuthorizationHandler() {
 			@Override
 			public void handle(HandshakeData handshakeData, AuthorizationCallback callback) {
-//				String token = handshakeData.getQueryParams().get("pass");
 				String htoken = handshakeData.getHeaders().get("token");
 				if(htoken != null && htoken.equals("true")){//memberService.isExistToken(token) == true){
 					callback.handle(null, true);
@@ -56,6 +55,7 @@ public class SampleVerticle extends DefaultEmbeddableVerticle {
 		});
 		io.sockets().onConnection(new Handler<SocketIOSocket>() {
 			public void handle(final SocketIOSocket socket) {
+				String htoken = socket.handshakeData().getHeaders().get("token");
 				socket.emit("welcome : "+"Chang im chat is started");
 				socket.on("echo", new Handler<JsonObject>() {
 					public void handle(JsonObject msg) {

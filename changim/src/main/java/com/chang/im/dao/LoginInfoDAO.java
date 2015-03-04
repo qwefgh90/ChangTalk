@@ -11,7 +11,7 @@ import com.chang.im.dto.Member;
 import com.chang.im.dto.LoginInfo;
 
 @Repository
-public class LoginInfoDAO {
+public class LoginInfoDAO extends BaseDAO{
 
 	@Autowired
 	RedisTemplate<String,LoginInfo> redisTemplateForUserinfo;

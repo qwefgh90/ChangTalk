@@ -2,11 +2,9 @@ package com.chang.im.service.test;
 
 
 
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+
+import java.util.Set;
 
 import org.junit.After;
 import org.junit.Before;
@@ -18,18 +16,17 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 
 import com.chang.im.config.Application;
-import com.chang.im.dao.MemberDAO;
-import com.chang.im.dao.TokenDAO;
 import com.chang.im.dao.LoginInfoDAO;
-import com.chang.im.dto.Member;
-import com.chang.im.dto.LoginInfo;
-import com.chang.im.util.IMUtil;
+import com.chang.im.dao.MemberDAO;
+import com.chang.im.dao.MessageDAO;
+import com.chang.im.dao.TokenDAO;
+import com.chang.im.dto.Packet;
 
 
 
-//@RunWith(SpringJUnit4ClassRunner.class)
-//@SpringApplicationConfiguration(classes = Application.class)
-//@WebAppConfiguration
+@RunWith(SpringJUnit4ClassRunner.class)
+@SpringApplicationConfiguration(classes = Application.class)
+@WebAppConfiguration
 public class DAOTest {
 	@Autowired
 	MemberDAO memberDAO;
@@ -40,16 +37,36 @@ public class DAOTest {
 	@Autowired
 	TokenDAO tokenDAO;
 
-	final Member member = new Member();;
-	final LoginInfo info = new LoginInfo();;
+	@Autowired
+	MessageDAO messageDAO;
+	
+	Long roomId = 1234L;
 
-//	@Before
-//	public void setup(){
-//	}
-//	
-//	@After
-//	public void clean(){
-//	}
-
+	@Before
+	public void before(){
+	}
+	
+	@After
+	public void after(){
+	}
+	
+	@Test
+	public void messageTest(){
+		sendMessage();
+		readMessage();
+	}
+	
+	public void sendMessage(){
+		Packet p = new Packet();
+		p.setTimestamp(1111L);
+		messageDAO.saveMessage(roomId.toString(), p);
+		p.setTimestamp(2222L);
+		messageDAO.saveMessage(roomId.toString(), p);
+	}
+	
+	public void readMessage(){
+		Set<String> string = messageDAO.readMessage(roomId.toString(), 1111L);
+		assertTrue(string.size() == 2);
+	}
 }
 
