@@ -13,6 +13,9 @@ public class BaseDAO {
 	public void delete(String key){
 		redisTemplate.delete(key);
 	}
+	public String getValue(String key){
+		return redisTemplate.opsForValue().get(key);
+	}
 	
 	public boolean isExsist(String key){
 		return redisTemplate.hasKey(key);

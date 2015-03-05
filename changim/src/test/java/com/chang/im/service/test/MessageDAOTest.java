@@ -27,7 +27,7 @@ import com.chang.im.dto.Packet;
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = Application.class)
 @WebAppConfiguration
-public class DAOTest {
+public class MessageDAOTest {
 	@Autowired
 	MemberDAO memberDAO;
 
@@ -40,14 +40,16 @@ public class DAOTest {
 	@Autowired
 	MessageDAO messageDAO;
 	
-	Long roomId = 1234L;
+	Long roomId = -1L;
 
 	@Before
 	public void before(){
+	
 	}
 	
 	@After
 	public void after(){
+		
 	}
 	
 	@Test
