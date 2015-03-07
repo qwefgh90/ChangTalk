@@ -2,6 +2,7 @@ package com.chang.im.service.test;
 
 
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Set;
@@ -44,12 +45,29 @@ public class MessageDAOTest {
 
 	@Before
 	public void before(){
-	
+		messageDAO.delete("Message:-1");
 	}
 	
 	@After
 	public void after(){
 		
+	}
+	
+	@Test
+	public void roomTest(){
+		final String userId = "qwefgh90";
+		final String roomId = "hellroom";
+		messageDAO.saveRoomList(userId,roomId);
+		messageDAO.saveRoomUser(roomId, userId);
+		
+		assertTrue(messageDAO.findRoomList(userId, roomId));
+		assertTrue(messageDAO.findRoomUser(roomId, userId));
+
+		messageDAO.deleteRoomList(userId, roomId);
+		messageDAO.deleteRoomUser(roomId, userId);
+			
+		assertFalse(messageDAO.findRoomList(userId, roomId));
+		assertFalse(messageDAO.findRoomUser(roomId, userId));
 	}
 	
 	@Test

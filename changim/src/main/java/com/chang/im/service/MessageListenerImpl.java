@@ -1,7 +1,6 @@
 package com.chang.im.service;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
@@ -9,7 +8,11 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
 
+import com.chang.im.chat.controller.MessageVerticle;
+import com.chang.im.chat.protocol.SendMsgToCli;
+import com.chang.im.dao.FailDAO;
 import com.chang.im.dto.Packet;
+import com.nhncorp.mods.socket.io.SocketIOSocket;
 /**
  * Here is Subscriber
  * Spring data redis thread
@@ -17,14 +20,23 @@ import com.chang.im.dto.Packet;
  *
  */
 public class MessageListenerImpl implements MessageListener {
-
+	
 	ObjectMapper mapper = new ObjectMapper();
 
 	public MessageListenerImpl(){}
+	
+	String channel;
+	String id;
+	SocketIOSocket socket;
+	
+	FailDAO failDAO;
 
-	//Room Subscriber 정보, 채널, 소켓, 
-	public MessageListenerImpl(Object socket){
-
+	//Room Subscriber 정보, 채널, 소켓
+	public MessageListenerImpl(SocketIOSocket socket, String id, String channel, FailDAO failDAO){
+		this.socket = socket;
+		this.id = id;
+		this.channel = channel;
+		this.failDAO = failDAO;
 	}
 	/**
 	 * 구독한 모든 메세지 처리하는 로직
@@ -33,30 +45,38 @@ public class MessageListenerImpl implements MessageListener {
 	 */
 	@Override
 	public void onMessage(Message message, byte[] pattern) {
-		try {
-			System.out.println("[MessageListenerImpl] channel: "
-					+new String(message.getChannel(),"UTF-8")
-					+", body: "+new String(message.getBody(),"UTF-8")
-					+"\n pattern: "+new String(pattern,"UTF-8"));
-		} catch (UnsupportedEncodingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 
 		try {
 			Packet packet = mapper.readValue(message.getBody(), Packet.class);
-			System.out.println("[MessageListenerImpl] "
-					+packet.getFromID()+", "
-					+packet.getContent()+", "
-					+packet.getTimestamp());
+//			System.out.println("[MessageListenerImpl] "
+//					+packet.getFromId()+", "
+//					+packet.getContent()+", "
+//					+packet.getTimestamp());
+			
+			//메세지 생성
+			SendMsgToCli clientMsg = new SendMsgToCli();
+			clientMsg.setContent(packet.getContent());
+			clientMsg.setFrom(packet.getFromId());
+			clientMsg.setMessageIndex(packet.getMessageIndex());
+			clientMsg.setTimestamp(packet.getTimestamp());
+			clientMsg.setRoomId(packet.getRoomId());
+
+			//실패 메세지 큐 등록 //응답에서 제거
+			failDAO.saveFailMessage(id, packet);
+			
+			//메세지 전송 
+			socket.emit(MessageVerticle.Protocol.sendMsgToCli.name(), mapper.writeValueAsString(clientMsg));
+			
 		} catch (JsonParseException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+		
 		} catch (JsonMappingException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+		
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
+			e.printStackTrace();
+		
+		} catch (Exception e){
 			e.printStackTrace();
 		}
 	}

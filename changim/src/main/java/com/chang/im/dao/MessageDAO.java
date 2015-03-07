@@ -1,5 +1,6 @@
 package com.chang.im.dao;
 
+import java.util.List;
 import java.util.Set;
 
 import javax.annotation.Resource;
@@ -35,20 +36,22 @@ public class MessageDAO extends BaseDAO {
 	/**
 	 * redis publish 사용 
 	 * @param channel
-	 * @param message
+	 * @param packet
 	 * @return
 	 */
-	public boolean sendMessage(String channel, Packet message){
-		if(message == null)
+	public boolean sendMessage(String channel, Packet packet){
+		if(packet == null)
 			return false;
 		String json;
 		try {
-			json = mapper.writeValueAsString(message);
+			json = mapper.writeValueAsString(packet);
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
 			return false;
 		}
 		redisTemplateForMessage.convertAndSend(channel, json);
+		
+		
 		return true;
 	}
 
@@ -63,6 +66,15 @@ public class MessageDAO extends BaseDAO {
 		return true;
 	}
 
+	public boolean deleteRoomUser(String roomId, String userId){
+		Long returnValue = setOps.remove(roomUserKey(roomId), userId);
+		return true;
+	}
+	
+	public boolean findRoomUser(String roomId, String userId){
+		return setOps.isMember(roomUserKey(roomId), userId);
+	}
+	
 	/**
 	 * 톡 리스트 저장
 	 * @param userId
@@ -74,6 +86,15 @@ public class MessageDAO extends BaseDAO {
 		return true;
 	}
 
+	public boolean deleteRoomList(String userId, String roomId){
+		Long returnValue = setOps.remove(userRoomKey(userId), roomId);
+		return true;
+	}
+	
+	public boolean findRoomList(String userId, String roomId){
+		return setOps.isMember(userRoomKey(userId), roomId);
+	}
+	
 	/**
 	 * 메세지 저장 (Publish만 저장하고 시간으로 가져올 수 있음)
 	 * @param roomId
@@ -110,16 +131,16 @@ public class MessageDAO extends BaseDAO {
 		Set<String> result = zsetOps.rangeByScore(messageKey(roomId), startTime, Long.MAX_VALUE);
 		return result;
 	}
-
-	public String roomUserKey(String roomId){
+	
+	private String roomUserKey(String roomId){
 		return "RoomUser:"+roomId;
 	}
 
-	public String userRoomKey(String userId){
+	private String userRoomKey(String userId){
 		return "RoomList:"+userId;
 	}
 
-	public String messageKey(String roomId){
+	private String messageKey(String roomId){
 		return "Message:"+roomId;
 	}
 }

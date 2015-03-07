@@ -1,4 +1,7 @@
 package com.chang.im.config;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -8,6 +11,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
+import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.listener.ChannelTopic;
@@ -18,8 +22,10 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import com.chang.im.dto.LoginInfo;
 import com.chang.im.dto.Member;
+import com.chang.im.dto.Packet;
 import com.chang.im.dto.TokenListItem;
 import com.chang.im.service.MessageListenerImpl;
+import com.nhncorp.mods.socket.io.SocketIOSocket;
 
 @Configuration
 //현재의 클래스가 Spring의 설정파일임을 어플리케이션 컨텍스트에게 알려주는 역할을 합니다.
@@ -107,6 +113,16 @@ public class Application {
 		return template;
 	}
 
+	@Bean
+	public RedisTemplate<String,String> redisTemplateForFail(){
+		RedisTemplate<String,String> template = new RedisTemplate<String,String>();
+		template.setConnectionFactory(jedisConnFactory());
+		template.setKeySerializer(new StringRedisSerializer());
+		template.setHashKeySerializer(new StringRedisSerializer());
+		template.setHashValueSerializer(new JacksonJsonRedisSerializer<Packet>(Packet.class));
+		return template;
+	}
+
 	////Messanger
 
 	@Bean
@@ -126,5 +142,15 @@ public class Application {
 	ChannelTopic sampleTopic() {
 		return new ChannelTopic( "CHANGIM" );
 	}
-
+	
+	@Bean
+	ConcurrentHashMap<String, SocketIOSocket> socketMap(){
+		return new ConcurrentHashMap<String, SocketIOSocket>();
+	}
+	
+	@Bean
+	ConcurrentHashMap<String, List<MessageListener>> listenerMap(){
+		return new ConcurrentHashMap<String, List<MessageListener>>();
+	}
+	
 }
