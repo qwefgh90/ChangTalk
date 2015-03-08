@@ -2,6 +2,7 @@ package com.chang.im.chat.controller;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -19,6 +20,8 @@ import org.vertx.java.core.json.JsonObject;
 
 import com.chang.im.chat.protocol.CreateRoom;
 import com.chang.im.chat.protocol.ExitRoom;
+import com.chang.im.chat.protocol.ReqFail;
+import com.chang.im.chat.protocol.ReqMsg;
 import com.chang.im.chat.protocol.Result;
 import com.chang.im.chat.protocol.SendMsg;
 import com.chang.im.dao.FailDAO;
@@ -97,11 +100,20 @@ public class MessageVerticle extends DefaultEmbeddableVerticle {
 		 * 연결 시 처리
 		 */
 		io.sockets().onConnection(new Handler<SocketIOSocket>() {
+
 			public void handle(final SocketIOSocket socket) {
 
 				String htoken = socket.handshakeData().getHeaders().get("token");
 				LoginInfo info = memberService.getUserInfo(htoken);
 				final String myId = info.getId();
+
+				/**
+				 * 이미 연결된 소켓이 있다면 끊고 다시시작
+				 */
+				SocketIOSocket beforeSocket = null;
+				if((beforeSocket = socketMap.get(myId)) != null){
+					beforeSocket.emitDisconnect("new socekt is connected");	//내부적으로 onDisconnect 호출하므로 상태 동기화 필요 없음
+				}
 
 				//리스너 컨테이너 생성
 				listenerMap.put(myId, new ArrayList<MessageListener>());
@@ -114,16 +126,24 @@ public class MessageVerticle extends DefaultEmbeddableVerticle {
 				 * 소켓 종료  / 자원정리
 				 */
 				socket.onDisconnect(new Handler<JsonObject>(){
-					@Override
-					public void handle(JsonObject event) {
 
+					private void clean(){
 						//subscribe 해제
 						List<MessageListener> list = listenerMap.get(myId);
-						for(MessageListener item : list){
-							redisContainer.removeMessageListener(item);
+						if(list!=null){
+							for(MessageListener item : list){
+								redisContainer.removeMessageListener(item);
+							}
+							list.clear();
 						}
-						list.clear();
 						listenerMap.remove(myId);
+						socketMap.remove(myId);
+					}
+
+					@Override
+					public void handle(JsonObject event) {
+						System.out.println("[Server] discoonect");
+						clean();
 					}
 				});
 
@@ -239,7 +259,9 @@ public class MessageVerticle extends DefaultEmbeddableVerticle {
 					}
 				});
 
-
+				/**
+				 * 채팅방 나갔을 때
+				 */
 				socket.on(Protocol.exitRoom.name(), new Handler<JsonObject>(){
 					@Override
 					public void handle(JsonObject event) {
@@ -247,6 +269,8 @@ public class MessageVerticle extends DefaultEmbeddableVerticle {
 							String data = event.getString("data");
 							ExitRoom exitRoom = mapper.readValue(data, ExitRoom.class);
 							String roomId = exitRoom.getRoomId();
+
+							//유효성 검사
 							if(messageDAO.findRoomList(myId, roomId)){
 								messageDAO.deleteRoomList(myId, roomId);
 								messageDAO.deleteRoomUser(roomId, myId);
@@ -260,24 +284,74 @@ public class MessageVerticle extends DefaultEmbeddableVerticle {
 					}
 				});
 
+				/**
+				 * 실패한 메세지 리스트 요청
+				 * Protocol.sendMsgToCli.name() 채널로 응답 올 것
+				 */
 				socket.on(Protocol.reqFail.name(), new Handler<JsonObject>(){
 					@Override
 					public void handle(JsonObject event) {
-						// TODO Auto-generated method stub
+						String data = event.getString("data");
+						try{
+							ReqFail reqFail = mapper.readValue(data, ReqFail.class);
 
-					}
-				});
+							//실패 메세지 읽어옴
+							List<Packet> packetList = failDAO.getFailMessage(myId, reqFail.getRoomId());
 
-				socket.on(Protocol.reqMsg.name(), new Handler<JsonObject>(){
-					@Override
-					public void handle(JsonObject event) {
-						// TODO Auto-generated method stub
+							Result result = new Result();
+							result.setPacket(packetList);
+							result.setResult(true);
+
+							String resultStr = mapper.writeValueAsString(result);
+							socket.emit(Protocol.reqFail.name(), resultStr);
+						}catch(Exception e){
+							e.printStackTrace();
+							socket.emit(Protocol.reqFail.name(), "{\"result\":false}");
+							return;
+						}
 
 					}
 				});
 
 				/**
-				 * 메세지 전송 성공 처리
+				 * 특정 시간 기준으로 메세지 요청
+				 * 별도의 응답이 필요 없음
+				 */
+				socket.on(Protocol.reqMsg.name(), new Handler<JsonObject>(){
+					@Override
+					public void handle(JsonObject event) {
+						String data = event.getString("data");
+						try{
+							ReqMsg reqMsg = mapper.readValue(data, ReqMsg.class);
+
+							//유효성 검사
+							if(messageDAO.findRoomList(myId, reqMsg.getRoomId()) == true){
+
+								//시간 기준으로 메세지 읽어옴
+								Set<String> messageSet = messageDAO.readMessage(reqMsg.getRoomId(), reqMsg.getLastTime());
+								List<Packet> packetList = new ArrayList<Packet>();
+								for(String messageStr : messageSet){
+									Packet packet = mapper.readValue(messageStr, Packet.class);
+									packetList.add(packet);
+								}
+
+								Result result = new Result();
+								result.setPacket(packetList);
+								result.setResult(true);
+
+								String resultStr = mapper.writeValueAsString(result);
+								socket.emit(Protocol.reqMsg.name(), resultStr);
+							}
+						}catch(Exception e){
+							e.printStackTrace();
+							socket.emit(Protocol.exitRoom.name(), "{\"result\":false}");
+						}
+					}
+				});
+
+				/**
+				 * 메세지에 대한 클라이언트의 확인 응답
+				 * 실패 메세지 수신에 대한 확인 응답
 				 */
 				socket.on(Protocol.sendMsgToCli.name(), new Handler<JsonObject>(){
 					@Override
@@ -298,7 +372,6 @@ public class MessageVerticle extends DefaultEmbeddableVerticle {
 						} catch (Exception e){
 							e.printStackTrace();
 						}
-
 					}
 				});
 

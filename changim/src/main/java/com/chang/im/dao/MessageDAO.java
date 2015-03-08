@@ -141,6 +141,6 @@ public class MessageDAO extends BaseDAO {
 	}
 
 	private String messageKey(String roomId){
-		return "Message:"+roomId;
+		return "MessageBox:"+roomId;
 	}
 }

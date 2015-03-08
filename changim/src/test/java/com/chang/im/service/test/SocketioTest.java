@@ -31,6 +31,7 @@ import org.springframework.test.context.web.WebAppConfiguration;
 import com.chang.im.chat.controller.MessageVerticle;
 import com.chang.im.chat.protocol.CreateRoom;
 import com.chang.im.chat.protocol.ExitRoom;
+import com.chang.im.chat.protocol.ReqFail;
 import com.chang.im.chat.protocol.Result;
 import com.chang.im.chat.protocol.SendMsg;
 import com.chang.im.chat.protocol.SendMsgToCli;
@@ -93,6 +94,11 @@ public class SocketioTest {
 
 	private void createNewMember(){
 		Member member = new Member();
+		member.setId("qwefgh90");
+		member.setPassword("password");
+		member.setPhone("01073144993");
+		member.setRoles(Member.MEMBER_ROLE);
+		memberService.registerMember(member);
 		member.setId("test");
 		member.setPassword("password");
 		member.setPhone("01073144993");
@@ -112,6 +118,140 @@ public class SocketioTest {
 	boolean checkConnect;
 	boolean checkMessage;
 
+	
+	String roomId= null;
+	/**
+	 * 메세지 전송 실패/ 메세지 요청 테스트
+	 * @throws IOException 
+	 * @throws JsonMappingException 
+	 * @throws JsonGenerationException 
+	 * @throws InterruptedException 
+	 */
+	@Test
+	public void failMessageTest() throws JsonGenerationException, JsonMappingException, IOException, InterruptedException{
+		socket = new SocketIO(url);
+		socket.addHeader("token",token);
+		socket.connect(new IOCallback(){
+			@Override
+			public void on(String channel, IOAcknowledge arg1, Object... message) {
+				if(channel.equals(MessageVerticle.Protocol.createRoom.name())){
+					try {
+						Result result =mapper.readValue((String)message[0],Result.class);
+						roomId = result.getRoomId();
+						SendMsg msg = new SendMsg();
+						msg.setContent("안녕?");
+						msg.setRoomId(roomId);
+						socket.emit(MessageVerticle.Protocol.sendMsg.name(), mapper.writeValueAsString(msg));
+						msg.setContent("방가방가");
+						socket.emit(MessageVerticle.Protocol.sendMsg.name(), mapper.writeValueAsString(msg));
+					} catch (JsonParseException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (JsonMappingException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+			}
+
+			@Override
+			public void onConnect() {
+				
+			}
+
+			@Override
+			public void onDisconnect() {
+				
+			}
+
+			@Override
+			public void onError(SocketIOException arg0) {
+				
+			}
+
+			@Override
+			public void onMessage(String arg0, IOAcknowledge arg1) {
+				
+			}
+
+			@Override
+			public void onMessage(JSONObject arg0, IOAcknowledge arg1) {
+				
+			}
+			
+		});
+		CreateRoom room = new CreateRoom();
+		List list = new ArrayList();
+		list.add("test");
+		room.setIdList(list);
+		socket.emit(MessageVerticle.Protocol.createRoom.name(), mapper.writeValueAsString(room));
+		lock.await(10000, TimeUnit.MILLISECONDS);
+		
+		
+		socket = new SocketIO(url);
+		socket.addHeader("token",token);
+		socket.connect(new IOCallback(){
+			@Override
+			public void on(String channel, IOAcknowledge arg1, Object... message) {
+				if(channel.equals(MessageVerticle.Protocol.reqFail.name())){
+					String data = message[0].toString();
+					try {
+						Result result = mapper.readValue(data, Result.class);
+						assertTrue(result.getPacket().size() >= 2);
+						for(Packet item : result.getPacket()){
+							System.out.println(item.getContent());
+							assertTrue(item.getRoomId().equals(roomId));
+						}
+						
+					} catch (JsonParseException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (JsonMappingException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+			}
+
+			@Override
+			public void onConnect() {
+				
+			}
+
+			@Override
+			public void onDisconnect() {
+				
+			}
+
+			@Override
+			public void onError(SocketIOException arg0) {
+				
+			}
+
+			@Override
+			public void onMessage(String arg0, IOAcknowledge arg1) {
+				
+			}
+
+			@Override
+			public void onMessage(JSONObject arg0, IOAcknowledge arg1) {
+				
+			}
+		});
+		ReqFail reqFail = new ReqFail();
+		reqFail.setRoomId(roomId);
+		socket.emit(MessageVerticle.Protocol.reqFail.name(), mapper.writeValueAsString(reqFail));
+		lock.await(10000, TimeUnit.MILLISECONDS);
+		
+	}
+	
+	
 	/**
 	 * 방 생성 및 메세지 전송 테스트(메세지 에코 테스트)
 	 * @throws InterruptedException
@@ -119,7 +259,7 @@ public class SocketioTest {
 	 * @throws JsonMappingException
 	 * @throws IOException
 	 */
-	@Test
+	//@Test
 	public void makeRoom() throws InterruptedException, JsonGenerationException, JsonMappingException, IOException{
 		socket = new SocketIO(url);
 		socket.addHeader("token", token);
@@ -242,7 +382,12 @@ public class SocketioTest {
 		assertTrue(checkMessage);
 	}
 
-	@Test
+	/**
+	 * 연결 테스트
+	 * @throws MalformedURLException
+	 * @throws InterruptedException
+	 */
+	//@Test
 	public void connection() throws MalformedURLException, InterruptedException{
 		socket = new SocketIO(url);
 		socket.addHeader("token", token);
