@@ -1,5 +1,7 @@
 package com.chang.im.dao;
 
+import java.util.concurrent.TimeUnit;
+
 import javax.annotation.Resource;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +10,7 @@ import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Repository;
 
 import com.chang.im.dto.TokenListItem;
+import com.chang.im.util.IMUtil;
 
 @Repository
 public class TokenDAO extends BaseDAO {
@@ -21,7 +24,8 @@ public class TokenDAO extends BaseDAO {
 
 	public void insertTokenList(TokenListItem item){
 		String key = key(item.getId());
-		valueOps.set(key, item);
+		valueOps.set(key, item, item.getExpire() - IMUtil.getCurrentUnixTime(), TimeUnit.MILLISECONDS);
+//		valueOps.set(key, item);
 	}
 	
 	public TokenListItem getTokenList(String id){

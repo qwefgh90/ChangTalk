@@ -21,7 +21,7 @@ public class MemberService implements UserDetailsService{
 	MemberDAO memberDAO;
 
 	@Autowired
-	LoginInfoDAO userInfoDAO;
+	LoginInfoDAO loginInfoDAO;
 
 	@Autowired
 	TokenDAO tokenDAO;
@@ -111,7 +111,7 @@ public class MemberService implements UserDetailsService{
 				info.setPhone(member.getPhone());
 				info.setToken(token);
 				info.setRoles(member.getRoles());
-				userInfoDAO.insertUserInfo(info);
+				loginInfoDAO.insertUserInfo(info, expire);
 
 				TokenListItem item = new TokenListItem();
 				item.setId(member.getId());
@@ -132,12 +132,12 @@ public class MemberService implements UserDetailsService{
 	 * @return
 	 */
 	public boolean logout(String token){
-		boolean exists = userInfoDAO.isExistsUserInfo(token);
+		boolean exists = loginInfoDAO.isExistsUserInfo(token);
 		if(exists== false){
 			return false;
 		}else{
-			LoginInfo info = userInfoDAO.getUserInfo(token);
-			userInfoDAO.deleteUserInfo(token);
+			LoginInfo info = loginInfoDAO.getUserInfo(token);
+			loginInfoDAO.deleteUserInfo(token);
 			tokenDAO.deleteTokenList(info.getId());
 			return true;
 		}
@@ -152,13 +152,13 @@ public class MemberService implements UserDetailsService{
 	public LoginInfo getUserInfo(String token){
 		if(token == null)
 			return null;
-		return userInfoDAO.getUserInfo(token);
+		return loginInfoDAO.getUserInfo(token);
 	}
 
 	public boolean isExistToken(String token){
 		if(token == null)
 			return false;
-		return userInfoDAO.isExistsUserInfo(token);
+		return loginInfoDAO.isExistsUserInfo(token);
 	}
 //1425235429 1425235610
 	public boolean updateTokenDate(String token){
@@ -169,7 +169,9 @@ public class MemberService implements UserDetailsService{
 			TokenListItem tokenItem = getTokenListItem(info.getId());
 			if(null != tokenItem){
 				tokenItem.setExpire(makeExpireTime());
+				//expire Timeout 적용됨
 				tokenDAO.insertTokenList(tokenItem);
+				loginInfoDAO.insertUserInfo(info, tokenItem.getExpire());
 				return true;
 			}
 		}
@@ -182,8 +184,10 @@ public class MemberService implements UserDetailsService{
 		return tokenDAO.isExistsTokenList(id);
 	}
 	
-	private Long makeExpireTime(){
-		return IMUtil.getCurrentUnixTime()+3600*3;
+	public static int timeoutSecond = 3600;
+	
+	private static Long makeExpireTime(){
+		return IMUtil.getCurrentUnixTime()+timeoutSecond*1000;
 	}
 }
 

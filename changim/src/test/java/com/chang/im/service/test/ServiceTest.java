@@ -3,8 +3,12 @@ package com.chang.im.service.test;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
 import org.junit.Before;
@@ -17,9 +21,9 @@ import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.chang.im.config.Application;
+import com.chang.im.dto.LoginInfo;
 import com.chang.im.dto.Member;
 import com.chang.im.dto.TokenListItem;
-import com.chang.im.dto.LoginInfo;
 import com.chang.im.service.MemberService;
 
 
@@ -61,6 +65,66 @@ public class ServiceTest {
 		existsUser();
 		deleteUser();
 		notExistsUser();
+	}
+	
+
+	private CountDownLatch lock = new CountDownLatch(1);
+	
+	/**
+	 * expire 테스트
+	 * @throws InterruptedException
+	 */
+	@Test
+	public void expireTest() throws InterruptedException{
+		MemberService.timeoutSecond = 5;
+		registerUser();
+		login();
+		TokenListItem item = memberService.getTokenListItem(member.getId());
+		String token = item.getToken();
+		LoginInfo info = memberService.getUserInfo(token);
+		assertNotNull(item);
+		assertNotNull(info);
+
+		lock.await(5000, TimeUnit.MILLISECONDS);
+		
+		item = memberService.getTokenListItem(member.getId());
+		info = memberService.getUserInfo(token);
+		assertNull(item);
+		assertNull(info);
+	}
+	
+	/**
+	 * expire 갱신 테스트
+	 * @throws InterruptedException
+	 */
+	@Test
+	public void expireTest2() throws InterruptedException{
+		MemberService.timeoutSecond = 5;
+		registerUser();
+		login();
+		TokenListItem item = memberService.getTokenListItem(member.getId());
+		String token = item.getToken();
+		LoginInfo info = memberService.getUserInfo(token);
+		assertNotNull(item);
+		assertNotNull(info);
+
+		lock.await(3000, TimeUnit.MILLISECONDS);
+		
+		memberService.updateTokenDate(token);
+
+		lock.await(3000, TimeUnit.MILLISECONDS);
+		
+		item = memberService.getTokenListItem(member.getId());
+		info = memberService.getUserInfo(token);
+		assertNotNull(item);
+		assertNotNull(info);
+
+		lock.await(2000, TimeUnit.MILLISECONDS);
+		
+		item = memberService.getTokenListItem(member.getId());
+		info = memberService.getUserInfo(token);
+		assertNull(item);
+		assertNull(info);
 	}
 
 	private void updateTokenDate(){

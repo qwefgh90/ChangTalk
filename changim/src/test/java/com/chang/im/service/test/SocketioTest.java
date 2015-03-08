@@ -259,7 +259,7 @@ public class SocketioTest {
 	 * @throws JsonMappingException
 	 * @throws IOException
 	 */
-	//@Test
+	@Test
 	public void makeRoom() throws InterruptedException, JsonGenerationException, JsonMappingException, IOException{
 		socket = new SocketIO(url);
 		socket.addHeader("token", token);
@@ -387,7 +387,7 @@ public class SocketioTest {
 	 * @throws MalformedURLException
 	 * @throws InterruptedException
 	 */
-	//@Test
+	@Test
 	public void connection() throws MalformedURLException, InterruptedException{
 		socket = new SocketIO(url);
 		socket.addHeader("token", token);

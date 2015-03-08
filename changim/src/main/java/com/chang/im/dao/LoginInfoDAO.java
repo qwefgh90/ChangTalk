@@ -1,5 +1,7 @@
 package com.chang.im.dao;
 
+import java.util.concurrent.TimeUnit;
+
 import javax.annotation.Resource;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import com.chang.im.dto.Member;
 import com.chang.im.dto.LoginInfo;
+import com.chang.im.util.IMUtil;
 
 @Repository
 public class LoginInfoDAO extends BaseDAO{
@@ -19,9 +22,10 @@ public class LoginInfoDAO extends BaseDAO{
 	@Resource(name="redisTemplateForUserinfo")
     private ValueOperations<String, LoginInfo> valueOps;
 
-	public void insertUserInfo(LoginInfo userinfo){
+	public void insertUserInfo(LoginInfo userinfo, Long expire){
 		String key = key(userinfo.getToken());
-		valueOps.set(key, userinfo);
+//		valueOps.set(key, userinfo);
+		valueOps.set(key, userinfo, expire - IMUtil.getCurrentUnixTime(), TimeUnit.MILLISECONDS);
 	}
 
 	public boolean isExistsUserInfo(String token){
