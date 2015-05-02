@@ -46,6 +46,8 @@ import com.chang.im.service.MemberService;
 /**
  * https://github.com/Gottox/socket.io-java-client
  * socket.io-java-clint로 socketio 테스트
+ * 방생성 / 메세지 송 및 수신 / 실패 메세지 요청
+ * Redis에 기록이 남는 테스트
  * @author cheochangwon
  *
  */
@@ -109,6 +111,12 @@ public class SocketioTest {
 	@After
 	public void clean(){
 		memberService.logout(token);
+		Member member = new Member();
+		
+		member.setId("qwefgh90");
+		memberService.deleteMember(member);
+		member.setId("test");
+		memberService.deleteMember(member);
 	}
 	
 	int beforeSize = 0;
@@ -121,7 +129,7 @@ public class SocketioTest {
 	
 	String roomId= null;
 	/**
-	 * 메세지 전송 실패/ 메세지 요청 테스트
+	 * 메세지 전송 실패 / 실패 메세지 요청 테스트
 	 * @throws IOException 
 	 * @throws JsonMappingException 
 	 * @throws JsonGenerationException 
@@ -136,7 +144,7 @@ public class SocketioTest {
 			public void on(String channel, IOAcknowledge arg1, Object... message) {
 				if(channel.equals(MessageVerticle.Protocol.createRoom.name())){
 					try {
-						Result result =mapper.readValue((String)message[0],Result.class);
+						Result result = mapper.readValue((String)message[0],Result.class);
 						roomId = result.getRoomId();
 						SendMsg msg = new SendMsg();
 						msg.setContent("안녕?");
@@ -202,7 +210,7 @@ public class SocketioTest {
 						Result result = mapper.readValue(data, Result.class);
 						assertTrue(result.getPacket().size() >= 2);
 						for(Packet item : result.getPacket()){
-							System.out.println(item.getContent());
+							System.out.println("실패 메세지: "+item.getContent());
 							assertTrue(item.getRoomId().equals(roomId));
 						}
 						
@@ -248,12 +256,11 @@ public class SocketioTest {
 		reqFail.setRoomId(roomId);
 		socket.emit(MessageVerticle.Protocol.reqFail.name(), mapper.writeValueAsString(reqFail));
 		lock.await(10000, TimeUnit.MILLISECONDS);
-		
 	}
 	
 	
 	/**
-	 * 방 생성 및 메세지 전송 테스트(메세지 에코 테스트)
+	 * 방 생성 / 메세지 송신 / 수신 테스트(메세지 에코 테스트)
 	 * @throws InterruptedException
 	 * @throws JsonGenerationException
 	 * @throws JsonMappingException
@@ -383,7 +390,7 @@ public class SocketioTest {
 	}
 
 	/**
-	 * 연결 테스트
+	 * SocketIO 연결 테스트
 	 * @throws MalformedURLException
 	 * @throws InterruptedException
 	 */

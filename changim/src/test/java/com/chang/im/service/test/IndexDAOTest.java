@@ -13,6 +13,11 @@ import org.springframework.test.context.web.WebAppConfiguration;
 import com.chang.im.config.Application;
 import com.chang.im.dao.IndexDAO;
 
+/**
+ * 
+ * @author cheochangwon
+ * 룸/메세지 인덱스 테스트 
+ */
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = Application.class)
 @WebAppConfiguration
@@ -24,6 +29,9 @@ public class IndexDAOTest {
 	String roomIndex;
 	String messageIndex;
 	
+	/**
+	 * 룸/메세지 인덱스 테스트
+	 */
 	@Test
 	public void increaseTest(){
 		roomIndex = indexDAO.increaseRoomIndex();

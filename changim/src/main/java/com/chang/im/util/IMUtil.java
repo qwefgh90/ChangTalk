@@ -7,6 +7,11 @@ import java.util.Map;
 
 import org.apache.commons.beanutils.BeanUtils;
 
+/**
+ * 
+ * @author cheochangwon
+ * 리플렉션/ 해시생성
+ */
 public class IMUtil {
 	public static Map objectToMap(Object object) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException{
 		return BeanUtils.describe(object);

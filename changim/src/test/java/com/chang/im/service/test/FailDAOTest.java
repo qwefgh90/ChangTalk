@@ -17,6 +17,11 @@ import com.chang.im.config.Application;
 import com.chang.im.dao.FailDAO;
 import com.chang.im.dto.Packet;
 
+/**
+ * 
+ * @author cheochangwon
+ * 실패 메세지 저정 및 요청 테스트
+ */
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = Application.class)
 @WebAppConfiguration
@@ -57,7 +62,5 @@ public class FailDAOTest {
 		failDAO.clearFailMessage("qwefgh90", "-1");
 		result = failDAO.getFailMessage("qwefgh90", "-1");
 		assertNull(result);
-
-		
 	}
 }

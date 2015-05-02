@@ -26,7 +26,11 @@ import com.chang.im.dto.Member;
 import com.chang.im.dto.TokenListItem;
 import com.chang.im.service.MemberService;
 
-
+/**
+ * 
+ * @author cheochangwon
+ * 회원가입/ 로그인/ 토큰/ 사용자 정보/ 토큰 갱신 테스트
+ */
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = Application.class)
 @WebAppConfiguration
@@ -71,7 +75,7 @@ public class ServiceTest {
 	private CountDownLatch lock = new CountDownLatch(1);
 	
 	/**
-	 * expire 테스트
+	 * 회원가입 / 로그인 / 토큰 테스트
 	 * @throws InterruptedException
 	 */
 	@Test
@@ -94,7 +98,8 @@ public class ServiceTest {
 	}
 	
 	/**
-	 * expire 갱신 테스트
+	 * 토큰 갱신 테스트
+	 * 유효시간 5초로 설정
 	 * @throws InterruptedException
 	 */
 	@Test

@@ -24,7 +24,11 @@ import com.chang.im.dao.TokenDAO;
 import com.chang.im.dto.Packet;
 
 
-
+/**
+ * 
+ * @author cheochangwon
+ * 방생성 / 메세지 관련 DAO 테스트 
+ */
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = Application.class)
 @WebAppConfiguration

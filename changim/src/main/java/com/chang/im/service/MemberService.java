@@ -36,6 +36,11 @@ public class MemberService implements UserDetailsService{
 			return new MemberContext(member);
 	}
 
+	public static int timeoutSecond = 3600;
+	private static Long makeExpireTime(){
+		return IMUtil.getCurrentUnixTime()+timeoutSecond*1000;
+	}
+	
 	/**
 	 * 회원 등록
 	 * @param member
@@ -182,12 +187,6 @@ public class MemberService implements UserDetailsService{
 		if(id == null)
 			return false;
 		return tokenDAO.isExistsTokenList(id);
-	}
-	
-	public static int timeoutSecond = 3600;
-	
-	private static Long makeExpireTime(){
-		return IMUtil.getCurrentUnixTime()+timeoutSecond*1000;
 	}
 }
 
