@@ -29,7 +29,7 @@ public class AuthenticationServiceImpl implements AuthenticationService{
 	public String authenticate(String id, String password) {
 		if(id != null && password != null){
 			try {
-				if(memberService.getLoginState(id)){
+				if(memberService.getLoginState(id) && memberService.isValidIdAndPassword(id, password)){
 					String token = memberService.getTokenListItem(id).getToken();
 					if(null != token && checkToken(token))
 						return token;

@@ -39,18 +39,17 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
  			.authenticationEntryPoint(unauthorizedEntryPoint())	//예외 발생시 핸들러 등록
  			.and()
 		.authorizeRequests()	//use-expressions = true 를 포함함
-			//위쪽부터 일치하는지 검사하므로 허가 허용하고 싶을 경우 위쪽으로 배치
-			.regexMatchers("/").permitAll()	//URL 허가
+			//위쪽부터 일치하는지 검사하므로 로그인 없이 허가 허용하고 싶을 경우 위쪽으로 배치
+			.regexMatchers("/").permitAll()			//URL 허가
 			.regexMatchers("/hello").permitAll()	//URL 허가
 			.regexMatchers(HttpMethod.POST,"/v1/member").permitAll()	//회원 가입
-			.regexMatchers("/v1/.*").fullyAuthenticated();	//회원 가입
+			.regexMatchers("/v1/.*").fullyAuthenticated();	//Rest api를 위한 완전한 인증
 	}
 
 	@Autowired
 	public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
 		BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-		auth
-		.userDetailsService(memberService);
+		auth.userDetailsService(memberService);
 		//.passwordEncoder(passwordEncoder);	//실제 서비스 시 인코더 적용?
 	}
 	

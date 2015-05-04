@@ -40,7 +40,7 @@ public class MemberService implements UserDetailsService{
 	private static Long makeExpireTime(){
 		return IMUtil.getCurrentUnixTime()+timeoutSecond*1000;
 	}
-	
+
 	/**
 	 * 회원 등록
 	 * @param member
@@ -95,6 +95,17 @@ public class MemberService implements UserDetailsService{
 		}
 	}
 
+	public boolean isValidIdAndPassword(String id, String password)
+	{
+		if(id != null && password != null){
+			Member dbMember = memberDAO.getMember(id);
+			if(dbMember.getId().equals(id) == true && dbMember.getPassword().equals(password) == true){
+				return true;
+			}
+		}
+		return false;
+	}
+
 	/**
 	 * 존재 유무 확인 후 로그인
 	 * @param member
@@ -105,7 +116,7 @@ public class MemberService implements UserDetailsService{
 			return false;
 		}else{
 			Member dbMember = memberDAO.getMember(member.getId());
-			if(dbMember.getId().equals(member.getId()) == true && dbMember.getPassword().equals(member.getPassword()) == true){
+			if(isValidIdAndPassword(member.getId(),member.getPassword())){
 				long unixtime = IMUtil.getCurrentUnixTime();
 				long expire = makeExpireTime();	//3시간
 				String token = IMUtil.sha256(member.getId() + unixtime);
@@ -165,7 +176,7 @@ public class MemberService implements UserDetailsService{
 			return false;
 		return loginInfoDAO.isExistsUserInfo(token);
 	}
-//1425235429 1425235610
+	//1425235429 1425235610
 	public boolean updateTokenDate(String token){
 		if(token == null)
 			return false;
@@ -184,6 +195,7 @@ public class MemberService implements UserDetailsService{
 	}
 
 	public boolean getLoginState(String id){
+
 		if(id == null)
 			return false;
 		return tokenDAO.isExistsTokenList(id);

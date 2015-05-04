@@ -16,13 +16,19 @@ public class MemberController {
 
 	@Autowired
 	MemberService memberService;
-
+	
+	// 로그인, 로그아웃은 Spring Security의 인증필터에서 처리 
+	// RestAuthenticationFilter.class
+	// "/v1/auth/login";
+	// "/v1/auth/logout";
+		
 	/**
 	 * \@RequestsBody를 이용해 Obejct 응답 (Object -> JSON 매핑)을 할 경우 Object의 Setter/Getter가 없을경우
 	 * 406 에러를 발생시킨다. 정말 중요하다.
 	 * @param member
 	 * @return
 	 */
+	
 	@RequestMapping(value="/v1/member", method=RequestMethod.POST)
 	ResponseEntity<ResultDTO>  registerMember(@RequestBody Member member){
 		member.setRoles(Member.MEMBER_ROLE);
@@ -62,29 +68,4 @@ class ResultDTO {
 	public void setResultCode(int resultCode) {
 		this.resultCode = resultCode;
 	}
-	
-}
-class ResultTokenDTO {
-	int resultCode;
-	String token;
-	public ResultTokenDTO(int resultCode, String token) {
-		super();
-		this.resultCode = resultCode;
-		this.token = token;
-	}
-	public int getResultCode() {
-		return resultCode;
-	}
-	public void setResultCode(int resultCode) {
-		this.resultCode = resultCode;
-	}
-	public String getToken() {
-		return token;
-	}
-	public void setToken(String token) {
-		this.token = token;
-	}
-	
-	
-
 }
