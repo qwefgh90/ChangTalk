@@ -31,7 +31,6 @@ public abstract class DefaultEmbeddableVerticle implements EmbeddableVerticle {
                 vertx = new DefaultVertx();
             }
         }
-        
         beanFactory.getBean(this.getClass()).start(vertx);
     }
 

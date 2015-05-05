@@ -1,18 +1,20 @@
 package com.chang.im.service;
 
+import java.util.Set;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import com.chang.im.dao.LoginInfoDAO;
 import com.chang.im.dao.MemberDAO;
 import com.chang.im.dao.TokenDAO;
-import com.chang.im.dao.LoginInfoDAO;
+import com.chang.im.dto.LoginInfo;
 import com.chang.im.dto.Member;
 import com.chang.im.dto.MemberContext;
 import com.chang.im.dto.TokenListItem;
-import com.chang.im.dto.LoginInfo;
 import com.chang.im.util.IMUtil;
 
 @Service
@@ -75,6 +77,7 @@ public class MemberService implements UserDetailsService{
 		boolean result = isExistsMember(member);
 		if(result == true){
 			memberDAO.deleteMember(member.getId());
+			memberDAO.removeID(member.getId());
 			return ! isExistsMember(member);
 		}else{
 			return true;
@@ -83,6 +86,7 @@ public class MemberService implements UserDetailsService{
 
 	/**
 	 * 회원 정보
+	 * ID정보만 포함되어 있으면 동작
 	 * @param member
 	 * @return
 	 */
@@ -200,5 +204,17 @@ public class MemberService implements UserDetailsService{
 			return false;
 		return tokenDAO.isExistsTokenList(id);
 	}
+	
+	@Deprecated
+	public Set<String> getAllID(){
+		return memberDAO.getAllID();
+	}
+	public void addID(String id){
+		memberDAO.addID(id);
+	}
+	public void removeID(String id){
+		memberDAO.removeID(id);
+	}
+	
 }
 

@@ -1,6 +1,7 @@
 package com.chang.im.chat.controller;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -8,6 +9,8 @@ import java.util.concurrent.ConcurrentMap;
 
 import javax.annotation.Resource;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.data.redis.listener.ChannelTopic;
@@ -32,6 +35,7 @@ import com.chang.im.dto.Member;
 import com.chang.im.dto.Packet;
 import com.chang.im.service.MemberService;
 import com.chang.im.service.MessageListenerImpl;
+import com.chang.im.util.IMUtil;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -49,7 +53,7 @@ import com.nhncorp.mods.socket.io.impl.HandshakeData;
 public class MessageVerticle extends DefaultEmbeddableVerticle {
 
 	public static enum Protocol{
-		createRoom,sendMsg,sendMsgToCli,exitRoom,reqFail,reqMsg
+		createRoom,sendMsg,sendMsgToCli,exitRoom,reqFail,reqMsg,reqAllID
 	}
 
 	private SocketIOServer io;
@@ -371,6 +375,42 @@ public class MessageVerticle extends DefaultEmbeddableVerticle {
 							e.printStackTrace();
 						} catch (Exception e){
 							e.printStackTrace();
+						}
+					}
+				});
+
+				/**
+				 * 모든 사용자의 정보 요청
+				 * 많은 오버헤드
+				 */
+				socket.on(Protocol.reqAllID.name(), new Handler<JsonObject>(){
+					@Override
+					@Deprecated
+					public void handle(JsonObject event) {
+						// TODO Auto-generated method stub
+						try{
+							Set<String> idList = memberService.getAllID();
+							Iterator<String> iter = idList.iterator();
+							Member parameterMember = new Member();
+							JSONArray arr = new JSONArray();
+							while(iter.hasNext()){
+								String id = iter.next();
+								parameterMember.setId(id);
+								Member dbMember = memberService.getMember(parameterMember);
+								dbMember.setPassword(null);
+								dbMember.setRoles(null);
+								
+								JSONObject object = new JSONObject(IMUtil.objectToMap(dbMember));
+								object.remove("password");
+								object.remove("roles");
+								object.remove("class");
+								
+								arr.put(object);
+							}
+							socket.emit(Protocol.reqAllID.name(), "{\"result\":true,\"list\":"+arr.toString()+"}");
+						}catch(Exception e){
+							e.printStackTrace();
+							socket.emit(Protocol.reqAllID.name(), "{\"result\":false}");
 						}
 					}
 				});
