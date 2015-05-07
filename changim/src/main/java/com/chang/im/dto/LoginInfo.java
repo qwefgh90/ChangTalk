@@ -1,5 +1,15 @@
 package com.chang.im.dto;
 
+import java.io.IOException;
+
+import org.codehaus.jackson.JsonGenerationException;
+import org.codehaus.jackson.map.JsonMappingException;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import com.chang.im.chat.netty.JsonHandler;
+import com.chang.im.chat.protocol.JsonTransformer;
+
 public class LoginInfo {
 	String token;
 	String phone;
@@ -24,11 +34,10 @@ public class LoginInfo {
 	public void setPhone(String phone) {
 		this.phone = phone;
 	}
-	public String getId() {
+	public String getId() { 
 		return id;
 	}
 	public void setId(String id) {
 		this.id = id;
 	}
-	
 }

@@ -1,6 +1,10 @@
 package com.chang.im.chat.protocol;
 
-public class SendMsgToCli {
+import org.json.JSONObject;
+
+import com.chang.im.chat.netty.JsonHandler;
+
+public class SendMsgToCli extends JsonTransformer{
 	String roomId;
 	String messageIndex;
 	String from;
@@ -36,5 +40,14 @@ public class SendMsgToCli {
 	public void setContent(String content) {
 		this.content = content;
 	}
+	@Override
+	public JSONObject json() throws Exception {
+		JSONObject object = new JSONObject(this);	//getter를 이용한 객체생성
+		JSONObject result = new JSONObject();
+		result.put("type", JsonHandler.Protocol.sendMsgToCli.name());
+		result.put("content", object);
+		return result;
+	}
+
 	
 }

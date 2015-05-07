@@ -1,5 +1,9 @@
 package com.chang.im.dto;
 
+import org.json.JSONObject;
+
+import com.chang.im.chat.protocol.JsonTransformer;
+
 public class Packet {
 	String roomId;
 	String fromId;
@@ -37,5 +41,4 @@ public class Packet {
 	public void setContent(String content) {
 		this.content = content;
 	}
-	
 }

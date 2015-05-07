@@ -157,64 +157,64 @@ public class MessageVerticle extends DefaultEmbeddableVerticle {
 				socket.on(Protocol.createRoom.name(), new Handler<JsonObject>(){
 					@Override
 					public void handle(JsonObject event) {
-						CreateRoom req;
-						try{
-							String data = event.getString("data");
-							req = mapper.readValue(data, CreateRoom.class);
-						}catch(Exception e){
-							e.printStackTrace();
-							socket.emit(Protocol.createRoom.name(), "{\"result\":false}");
-							return;
-						}
-						try{
-							//방정보 생성
-							String roomId = indexDAO.increaseRoomIndex();	//방 인덱스
-
-							List<String> idList = req.getIdList();
-
-							//방접속 정보 저장
-							messageDAO.saveRoomList(myId, roomId);
-							messageDAO.saveRoomUser(roomId, myId);
-							MessageListener listener = new MessageListenerImpl(socket, myId, roomId, failDAO);
-							redisContainer.addMessageListener(listener, new ChannelTopic(roomId));	//리스너 자원 관리
-							listenerMap.get(myId).add(listener);
-
-							for(String id : idList){
-								Member member = new Member();
-								member.setId(id); 
-								//존재하는 사용자 일 경우에만
-								if(memberService.isExistsMember(member) == true && id.equals(myId) == false ){
-									messageDAO.saveRoomList(id, roomId);
-									messageDAO.saveRoomUser(roomId, id);
-
-									SocketIOSocket socket;
-									if( (socket = socketMap.get(id)) != null){
-										MessageListener listenerForSubscriber = new MessageListenerImpl(socket, id, roomId, failDAO);
-										redisContainer.addMessageListener(listenerForSubscriber, new ChannelTopic(roomId));	
-										listenerMap.get(id).add(listenerForSubscriber);
-									}
-								}
-							}
-
-							//초기 메세지 저장/전송 (publish)
-
-							String messageIndex = indexDAO.increaseMessageIndex(roomId);
-
-							Packet packet = new Packet();
-							packet.setFromId(myId);
-							packet.setContent(myId+"님의 채팅방에 초대 되었습니다.");
-							packet.setRoomId(roomId);
-							packet.setTimestamp(System.currentTimeMillis() / 1000);
-							packet.setMessageIndex(messageIndex);
-
-							messageDAO.saveMessage(roomId, packet);	//Redis 저장
-							messageDAO.sendMessage(roomId, packet);	//메세지 전송 (publish)
-							socket.emit(Protocol.createRoom.name(), "{\"result\":true,\"roomId\":\""+roomId+"\"}");
-						}catch(Exception e){
-							e.printStackTrace();
-							socket.emit(Protocol.createRoom.name(), "{\"result\":false}");
-							return;
-						}
+//						CreateRoom req;
+//						try{
+//							String data = event.getString("data");
+//							req = mapper.readValue(data, CreateRoom.class);
+//						}catch(Exception e){
+//							e.printStackTrace();
+//							socket.emit(Protocol.createRoom.name(), "{\"result\":false}");
+//							return;
+//						}
+//						try{
+//							//방정보 생성
+//							String roomId = indexDAO.increaseRoomIndex();	//방 인덱스
+//
+//							List<String> idList = req.getIdList();
+//
+//							//방접속 정보 저장
+//							messageDAO.saveRoomList(myId, roomId);
+//							messageDAO.saveRoomUser(roomId, myId);
+////							MessageListener listener = new MessageListenerImpl(socket, myId, roomId, failDAO);
+//							redisContainer.addMessageListener(listener, new ChannelTopic(roomId));	//리스너 자원 관리
+//							listenerMap.get(myId).add(listener);
+//
+//							for(String id : idList){
+//								Member member = new Member();
+//								member.setId(id); 
+//								//존재하는 사용자 일 경우에만
+//								if(memberService.isExistsMember(member) == true && id.equals(myId) == false ){
+//									messageDAO.saveRoomList(id, roomId);
+//									messageDAO.saveRoomUser(roomId, id);
+//
+//									SocketIOSocket socket;
+//									if( (socket = socketMap.get(id)) != null){
+//										MessageListener listenerForSubscriber = new MessageListenerImpl(socket, id, roomId, failDAO);
+//										redisContainer.addMessageListener(listenerForSubscriber, new ChannelTopic(roomId));	
+//										listenerMap.get(id).add(listenerForSubscriber);
+//									}
+//								}
+//							}
+//
+//							//초기 메세지 저장/전송 (publish)
+//
+//							String messageIndex = indexDAO.increaseMessageIndex(roomId);
+//
+//							Packet packet = new Packet();
+//							packet.setFromId(myId);
+//							packet.setContent(myId+"님의 채팅방에 초대 되었습니다.");
+//							packet.setRoomId(roomId);
+//							packet.setTimestamp(System.currentTimeMillis() / 1000);
+//							packet.setMessageIndex(messageIndex);
+//
+//							messageDAO.saveMessage(roomId, packet);	//Redis 저장
+//							messageDAO.sendMessage(roomId, packet);	//메세지 전송 (publish)
+//							socket.emit(Protocol.createRoom.name(), "{\"result\":true,\"roomId\":\""+roomId+"\"}");
+//						}catch(Exception e){
+//							e.printStackTrace();
+//							socket.emit(Protocol.createRoom.name(), "{\"result\":false}");
+//							return;
+//						}
 					}
 				});
 

@@ -1,5 +1,7 @@
 package com.chang.im.service;
 
+import io.netty.channel.Channel;
+
 import java.io.IOException;
 
 import org.codehaus.jackson.JsonParseException;
@@ -27,13 +29,13 @@ public class MessageListenerImpl implements MessageListener {
 	
 	String channel;
 	String id;
-	SocketIOSocket socket;
+	Channel socketChannel;
 	
 	FailDAO failDAO;
 
 	//Room Subscriber 정보, 채널, 소켓
-	public MessageListenerImpl(SocketIOSocket socket, String id, String channel, FailDAO failDAO){
-		this.socket = socket;
+	public MessageListenerImpl(Channel socketChannel, String id, String channel, FailDAO failDAO){
+		this.socketChannel = socketChannel;
 		this.id = id;
 		this.channel = channel;
 		this.failDAO = failDAO;
@@ -64,9 +66,9 @@ public class MessageListenerImpl implements MessageListener {
 			//실패 메세지 큐 등록 //응답에서 제거
 			failDAO.saveFailMessage(id, packet);
 			
+			System.out.println("Redis onMessage");
 			//메세지 전송 
-			socket.emit(MessageVerticle.Protocol.sendMsgToCli.name(), mapper.writeValueAsString(clientMsg));
-			
+			socketChannel.writeAndFlush(clientMsg.json().toString());
 		} catch (JsonParseException e) {
 			e.printStackTrace();
 		

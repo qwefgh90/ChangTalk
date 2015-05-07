@@ -1,5 +1,9 @@
 package com.chang.im.dto;
 
+import org.json.JSONObject;
+
+import com.chang.im.chat.protocol.JsonTransformer;
+
 public class TokenListItem {
 	String id;
 	String token;
@@ -22,6 +26,4 @@ public class TokenListItem {
 	public void setExpire(long expire) {
 		this.expire = expire;
 	}
-	
-	
 }
