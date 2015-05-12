@@ -2,7 +2,10 @@ package com.chang.im.config;
 import io.netty.channel.Channel;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import javax.annotation.Resource;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
@@ -157,20 +160,20 @@ public class Application {
 	ChannelTopic sampleTopic() {
 		return new ChannelTopic( "CHANGIM" );
 	}
-
+	
 	@Bean
-	ConcurrentHashMap<String, Channel> tokenChannelMap(){
-		return new ConcurrentHashMap<String, Channel>();
+	ConcurrentHashMap<String,Map<String, MessageListener>> idChannelListenerMap(){
+		return new ConcurrentHashMap<String,Map<String, MessageListener>>();
 	}
 
 	@Bean
-	ConcurrentHashMap<String, List<MessageListener>> listenerMap(){
-		return new ConcurrentHashMap<String, List<MessageListener>>();
+	ConcurrentHashMap<String,String> tokenIdMap(){
+		return new ConcurrentHashMap<String,String>();
 	}
 
 	@Bean
-	ConcurrentHashMap<Channel, String> channelIdMap(){
-		return new ConcurrentHashMap<Channel, String>();
+	ConcurrentHashMap<String,Channel> idChannelMap(){
+		return new ConcurrentHashMap<String,Channel>();
 	}
 
 }

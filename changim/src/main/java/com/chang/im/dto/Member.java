@@ -2,8 +2,8 @@ package com.chang.im.dto;
 
 public class Member {
 	String id;
-	String password;
 	String phone;
+	String password;
 	String[] roles;
 	
 	public static final String MEMBER_ROLE = "MEMBER_ROLE";

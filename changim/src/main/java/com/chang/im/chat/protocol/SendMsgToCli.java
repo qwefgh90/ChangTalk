@@ -4,7 +4,12 @@ import org.json.JSONObject;
 
 import com.chang.im.chat.netty.JsonHandler;
 
-public class SendMsgToCli extends JsonTransformer{
+/**
+ * 클라이언트에게 보내는 채팅방 메세지
+ * @author cheochangwon
+ *
+ */
+public class SendMsgToCli{
 	String roomId;
 	String messageIndex;
 	String from;
@@ -40,14 +45,4 @@ public class SendMsgToCli extends JsonTransformer{
 	public void setContent(String content) {
 		this.content = content;
 	}
-	@Override
-	public JSONObject json() throws Exception {
-		JSONObject object = new JSONObject(this);	//getter를 이용한 객체생성
-		JSONObject result = new JSONObject();
-		result.put("type", JsonHandler.Protocol.sendMsgToCli.name());
-		result.put("content", object);
-		return result;
-	}
-
-	
 }

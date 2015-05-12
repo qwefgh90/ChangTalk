@@ -7,6 +7,7 @@ import io.netty.handler.codec.MessageToMessageDecoder;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -28,13 +29,11 @@ public class JsonAndAuthDecoder extends MessageToMessageDecoder<String>{
 	MemberService memberService;
 
 	@Resource
-	ConcurrentHashMap<String,Channel> tokenChannelMap;
-
+	ConcurrentHashMap<String,Map<String, MessageListener>> idChannelListenerMap;
 	@Resource
-	ConcurrentHashMap<String, List<MessageListener>> listenerMap;
-
+	ConcurrentHashMap<String,String> tokenIdMap;
 	@Resource
-	ConcurrentHashMap<Channel, String> channelIdMap;
+	ConcurrentHashMap<String,Channel> idChannelMap;
 
 	@Override
 	protected void decode(ChannelHandlerContext ctx, String msg, List<Object> out)
@@ -47,28 +46,29 @@ public class JsonAndAuthDecoder extends MessageToMessageDecoder<String>{
 			/**
 			 * 토큰 인증 처리
 			 */
-			Channel oldChannel = tokenChannelMap.get(token);	//이미 등록된 채널
+			LoginInfo loginInfo = memberService.getUserInfo(token);	//새로운 채널
+			if(loginInfo == null)
+				throw new Exception("존재하지 않는 토큰입니다.");
+			String id = loginInfo.getId();
+			
+			tokenIdMap.put(token, id);
+			Channel oldChannel = idChannelMap.get(id);	//이미 등록된 채널
 			Channel newChannel = ctx.channel();			//새로운 채널
 			if(oldChannel == null || oldChannel != newChannel){	//사용자의 자료구조에 변경 사항 있는지
 				/**
 				 * 필요한 자료구조 관리
-				 * 1)토큰 - 채널
-				 * 2)채널 - 아이디
-				 * 3)아이디 - 리스너
+				 * 1)토큰 - 아이디
+				 * 2)아이디 - 채널
+				 * 3)아이디 - 리스너 컨테이너(해시맵)
 				 */
-				LoginInfo loginInfo = memberService.getUserInfo(token);	//새로운 채널
-				if(loginInfo == null)
-					throw new Exception("존재하지 않는 토큰입니다.");
 				if(oldChannel==null){
-					tokenChannelMap.put(token, newChannel);
+					idChannelMap.put(id, newChannel);
 				}else{
-					oldChannel.close();		//이전에 등록된 채널 제거
-					tokenChannelMap.put(token, newChannel);	//토큰 - 채널 등록
+					oldChannel.close();	
+					idChannelMap.put(id, newChannel);	//아이디 - 채널
 				}
-				String id = loginInfo.getId();
-				channelIdMap.put(newChannel, id);		//채널 - 아이디 등록
-				if(false == listenerMap.containsKey(newChannel))	//아디 - 리스너 컨테이더 없을때
-					listenerMap.put(id, new ArrayList<MessageListener>());//아이디 - 리스너 컨테이너 등록
+				if(false == idChannelListenerMap.containsKey(id))	//아디 - 리스너 컨테이더 없을때
+					idChannelListenerMap.put(id, new ConcurrentHashMap<String, MessageListener>());//아이디 - 리스너 컨테이너 등록
 			}
 
 			//인증 성공
