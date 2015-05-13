@@ -1,5 +1,9 @@
-# ChangIM
+#ChangTalk
 
-클라이언트 개발 진행중
+#Server
+ 
+**Spring Boot, Spring, Netty**
 
-현재 Test까지 완료
+#Client
+
+**QT-Framework**
