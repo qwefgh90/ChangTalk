@@ -1,4 +1,4 @@
-#ChangTalk
+#ChangTalk (중단, TERMINATED)
 
 #Server
  
